@@ -13,6 +13,7 @@ export const Todo = ({ todoValue, setTodos, todos, index }) => {
 
       <div className="col-3">
         <button className="text-danger" onClick={deleteTodos}>
+        {/* add .hover event for completed task, be able to edit the task! */}
           x
         </button>
       </div>
