@@ -7,21 +7,21 @@ export const Todo = ({
   setTodos,
   todos,
   index,
+  id,
+  getTodos,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   // DELETE: Uses /todos/ID (No username)
   const deleteTodos = () => {
     const taskToDelete = todos[index];
-    fetch(`hhttps://playground.4geeks.com/todo/todos/1`, {
+    fetch(`https://playground.4geeks.com/todo/todos/${id}`, {
       method: "DELETE",
-    })
-      .then((resp) => {
-        if (resp.ok) {
-          setTodos(todos.filter((_, i) => i !== index));
-        }
-      })
-      .catch((error) => console.error("Error deleting:", error));
+    }).then((resp) => {
+      if (resp.ok) {
+        getTodos();
+      }
+    });
   };
 
   // UPDATE (Checkbox): Uses /todos/ID (No username)

@@ -8,18 +8,38 @@ const Home = () => {
   const [inputValue, setInputValue] = useState("");
   const [dateValue, setDateValue] = useState("");
   const [todos, setTodos] = useState([]);
+  const username = "diego"
 
   // LOAD TASKS: Verbatim https://playground.4geeks.com/todo/users/diego
-  useEffect(() => {
-    fetch("https://playground.4geeks.com/todo/users/diego")
+  
+  const createUser = async () => {
+    const response = await fetch(`https://playground.4geeks.com/todo/users/diego`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
+    });
+    if (response.ok) {
+      getTodos(); // Load the list once user is created
+    }
+  };
+
+  // 2. Load Tasks (Checks for 404 to trigger createUser)
+  const getTodos = () => {
+    fetch(`https://playground.4geeks.com/todo/users/diego`)
       .then((rsp) => {
-        if (rsp.status === 404) throw new Error("User 'diego' not found");
+        if (rsp.status === 404) {
+          createUser(); // If user doesn't exist, create them
+          throw new Error("User not found");
+        }
         return rsp.json();
       })
       .then((data) => {
         if (data.todos) setTodos(data.todos);
       })
       .catch((error) => console.error("Error loading tasks:", error));
+  };
+
+  useEffect(() => {
+    getTodos();
   }, []);
 
   const handleInputChange = (e) => {
@@ -28,19 +48,22 @@ const Home = () => {
 
   const addTodo = () => {
     if (inputValue !== "") {
-      const taskForServer = { label: inputValue, is_done: false };
+      // API expects 'label' and 'is_done'
+      const taskForServer = { 
+        label: `${inputValue} ${dateValue ? "| Due: " + dateValue : ""}`, 
+        is_done: false 
+      };
 
-      // CREATE TASK: Verbatim https://playground.4geeks.com/todo/todos/diego
-      fetch("https://playground.4geeks.com/todo/todos/diego", {
+      fetch(`https://playground.4geeks.com/todo/todos/diego`, {
         method: "POST",
         body: JSON.stringify(taskForServer),
         headers: { "Content-Type": "application/json" },
       })
         .then((rsp) => rsp.json())
-        .then((data) => {
-          setTodos([...todos, { ...data, date: dateValue }]);
-          setInputValue("");
-          setDateValue("");
+        .then(() => {
+          getTodos(); // Refresh the list
+          setInputValue(""); // Refresh text input
+          setDateValue("");  // REFRESH DATE INPUT (clears it)
         })
         .catch((error) => console.error("Error adding task:", error));
     }
@@ -61,12 +84,13 @@ const Home = () => {
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleInputChange}
         />
-        <input
+        {/* Date input is now active and controlled */}
+        {/* <input
           type="date"
           className="form-control"
           value={dateValue}
           onChange={(e) => setDateValue(e.target.value)}
-        />
+        /> */}
         <button className="btn btn-success" onClick={addTodo}>Add Task</button>
       </div>
 
@@ -76,11 +100,12 @@ const Home = () => {
         <Todo
           key={todoObj.id || index}
           todoValue={todoObj.label}
-          dateValue={todoObj.date}
           isCompleted={todoObj.is_done}
           setTodos={setTodos}
           todos={todos}
           index={index}
+          id={todoObj.id}
+          getTodos={getTodos}
         />
       ))}
       <Footer todos={todos} />
