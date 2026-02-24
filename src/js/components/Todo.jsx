@@ -7,40 +7,32 @@ export const Todo = ({
   setTodos,
   todos,
   index,
+  deleteTodos,
   id,
   getTodos,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
-  // DELETE: Uses /todos/ID (No username)
-  const deleteTodos = () => {
-    const taskToDelete = todos[index];
-    fetch(`https://playground.4geeks.com/todo/todos/${id}`, {
-      method: "DELETE",
-    }).then((resp) => {
-      if (resp.ok) {
-        getTodos();
-      }
-    });
-  };
-
-  // UPDATE (Checkbox): Uses /todos/ID (No username)
-  const toggleComplete = () => {
+  const toggleComplete = async () => {
     const task = todos[index];
     const newStatus = !task.is_done;
 
-    // 1. Update UI locally first
     const newTodos = [...todos];
     newTodos[index] = { ...task, is_done: newStatus };
     setTodos(newTodos);
 
-    // 2. Sync with Server
-    fetch(`https://playground.4geeks.com/todo/todos/diego`, {
-      method: "GET",
-      body: JSON.stringify({ label: task.label, is_done: newStatus }),
-      headers: { "Content-Type": "application/json" },
-    }).catch((error) => console.error("Error syncing checkbox:", error));
+    try {
+      await fetch(`https://playground.4geeks.com/todo/todos/${id}`, {
+        method: "PUT", // Updated from GET because logic sends a body
+        body: JSON.stringify({ label: task.label, is_done: newStatus }),
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      console.error("Error syncing checkbox:", error);
+    }
   };
+
+  
 
   return (
     <div
@@ -71,13 +63,7 @@ export const Todo = ({
       </div>
       <div className="col-1">
         {isHovered && (
-          <span
-            className="text-danger"
-            onClick={deleteTodos}
-            style={{ cursor: "pointer", fontWeight: "bold" }}
-          >
-            x
-          </span>
+          <span onClick={() => deleteTodos(id)}>X</span>
         )}
       </div>
     </div>
